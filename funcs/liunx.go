@@ -8,7 +8,7 @@ import (
 	"io"
 	"errors"
 	"strings"
-	"github.com/liunxprocess/models"
+	"github.com/zhengjianwen/Processcollection/models"
 )
 
 func StartLiunxcollect() (data []models.ProcessLinux ) {
@@ -251,7 +251,7 @@ func makedataliunx(data string) (models.ProcessLinux, error) {
 				case 8:
 					newdata.Start = p_d
 				case 9:
-					newdata.Time = p_d
+					newdata.Stime = p_d
 				}
 				status = 1
 				key += 1

@@ -1,22 +1,16 @@
 package main
 
 import (
-	"github.com/liunxprocess/funcs"
+	"github.com/zhengjianwen/Processcollection/http"
+
 	"fmt"
-	"encoding/json"
 )
 
 
 
 func main() {
-	data := funcs.StartLiunxcollect()
-	d,_ := json.Marshal(data)
-	err :=funcs.Writefile(d)
-	if err != nil{
-		fmt.Println("写入失败！")
-	}else {
-		fmt.Println("写入成功")
-	}
+	fmt.Println("程序开始执行！")
+	http.Start()
 }
 // 启动采集并处理
 

@@ -11,7 +11,7 @@ type ProcessLinux struct {
 	Tty    			string
 	Stat    		string
 	Start   		string
-	Time    		string
+	Stime    		string
 	Command 		string
 	Runtime 		int64
 	Proto 			string
