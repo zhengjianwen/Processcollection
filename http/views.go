@@ -1,17 +1,18 @@
 package http
 
 import (
-	"net/http"
-	"strings"
-	"github.com/zhengjianwen/Processcollection/funcs"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
+	"strings"
+
+	"github.com/zhengjianwen/Processcollection/funcs"
 )
 
-func showpress(w http.ResponseWriter, req *http.Request)  {
+func showpress(w http.ResponseWriter, req *http.Request) {
 	path := "index.html"
 
 	fin, err := os.Open(path)
@@ -24,9 +25,9 @@ func showpress(w http.ResponseWriter, req *http.Request)  {
 
 }
 
-func getdata(w http.ResponseWriter, req *http.Request)  {
-	//data := funcs.StartLiunxcollect()
-	data := funcs.StartWindowscollect()
+func getdata(w http.ResponseWriter, req *http.Request) {
+	data := funcs.StartLiunxcollect()
+	//	data := funcs.StartWindowscollect()
 	bytes, _ := json.Marshal(data)
 	fmt.Fprint(w, string(bytes))
 
@@ -34,7 +35,7 @@ func getdata(w http.ResponseWriter, req *http.Request)  {
 
 func getCurrentPath() string {
 	s, err := exec.LookPath(os.Args[0])
-	if err != nil{
+	if err != nil {
 
 	}
 	i := strings.LastIndex(s, "\\")
