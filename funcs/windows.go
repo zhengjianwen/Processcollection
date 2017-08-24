@@ -6,12 +6,13 @@ import (
 	"bufio"
 	"io"
 	"strings"
+	"syscall"
 	"github.com/zhengjianwen/Processcollection/models"
 
 	"strconv"
 	"errors"
+	"unsafe"
 )
-
 
 func StartWindowscollect() (data []models.Process ) {
 	prot_data := windows_prot()
@@ -29,6 +30,7 @@ func StartWindowscollect() (data []models.Process ) {
 	}
 	return
 }
+
 func windows_prot() (data map[int64]models.Process) {
 	cmd := exec.Command("netstat","-ano")
 	//显示运行的命令
@@ -54,7 +56,18 @@ func windows_prot() (data map[int64]models.Process) {
 		if errs != nil{
 			continue
 		}
+		if _,ok := data[tmp.Pid];ok{
+			atpm := data[tmp.Pid]
+			atpm.Proto +=  "<br>"+tmp.Proto
+			atpm.ForeignAddr +=  "<br>"+tmp.ForeignAddr
+			atpm.LocalAddr +=  "<br>"+tmp.LocalAddr
+			atpm.State +=  "<br>"+tmp.State
+			atpm.Vsz += tmp.Vsz
+			tmp = atpm
+		}
 		data[tmp.Pid] = tmp
+
+
 	}
 	cmd.Wait()
 	return
@@ -112,6 +125,8 @@ func windows_process() (data map[int64]models.Process) {
 	}
 	cmd.Start()
 	reader := bufio.NewReader(stdout)
+	allmem := GetMemory()
+	user := GetUserName()
 	data = make(map[int64]models.Process)
 	var status = 0
 	for {
@@ -127,6 +142,8 @@ func windows_process() (data map[int64]models.Process) {
 		if errs != nil{
 			continue
 		}
+		tmp.User = user
+		tmp.Mem = MemOccupancy(allmem,tmp.Vsz)
 		data[tmp.Pid] = tmp
 	}
 	cmd.Wait()
@@ -179,3 +196,55 @@ func makedatawindows(data string) (newdata models.Process,err error) {
 
 }
 
+type memoryStatusEx struct {
+	cbSize                  uint32
+	dwMemoryLoad            uint32
+	ullTotalPhys            uint64 // in bytes
+	ullAvailPhys            uint64
+	ullTotalPageFile        uint64
+	ullAvailPageFile        uint64
+	ullTotalVirtual         uint64
+	ullAvailVirtual         uint64
+	ullAvailExtendedVirtual uint64
+}
+
+var kernel = syscall.NewLazyDLL("Kernel32.dll")
+
+//内存信息
+func GetMemory() int64 {
+	GlobalMemoryStatusEx := kernel.NewProc("GlobalMemoryStatusEx")
+	var memInfo memoryStatusEx
+	memInfo.cbSize = uint32(unsafe.Sizeof(memInfo))
+	mem, _, _ := GlobalMemoryStatusEx.Call(uintptr(unsafe.Pointer(&memInfo)))
+	if mem == 0 {
+		return 0
+	}
+	tmp := fmt.Sprint(memInfo.ullTotalPhys)
+	mem1,_ := strconv.ParseInt(tmp,10,64)
+	return mem1
+}
+
+// 用户账号
+func GetUserName() string {
+	var size uint32 = 128
+	var buffer = make([]uint16, size)
+	user := syscall.StringToUTF16Ptr("USERNAME")
+	r, err := syscall.GetEnvironmentVariable(user, &buffer[0], size)
+	if err != nil {
+		return ""
+	}
+	buffer[r] = '@'
+	if r >= size {
+		return syscall.UTF16ToString(buffer[:r])
+	}
+	return syscall.UTF16ToString(buffer[:r])
+}
+
+func MemOccupancy(allmem,mem int64) float64{
+	all:= float64(allmem)/1000
+	m := float64(mem)
+	ret := m/all
+	tmp := fmt.Sprintf("%.2f", ret*100)
+	ret ,_ = strconv.ParseFloat(tmp,64)
+	return ret
+}
