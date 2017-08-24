@@ -11,7 +11,7 @@ import (
 	"github.com/zhengjianwen/Processcollection/models"
 )
 
-func StartLiunxcollect() (data []models.ProcessLinux ) {
+func StartLiunxcollect() (data []models.Process ) {
 	portdata := liunx_dk()
 	processdata := liunx_process()
 	for k,v := range processdata{
@@ -33,7 +33,7 @@ func StartLiunxcollect() (data []models.ProcessLinux ) {
 
 
 //处理端口信息
-func liunx_dk() (data map[int64]models.PortLiunx) {
+func liunx_dk() (data map[int64]models.PortData) {
 	cmd := exec.Command("netstat", "-apn")
 	//显示运行的命令
 	//fmt.Println("运行的命令", cmd.Args)
@@ -45,7 +45,7 @@ func liunx_dk() (data map[int64]models.PortLiunx) {
 	cmd.Start()
 	reader := bufio.NewReader(stdout)
 	//实时循环读取输出流中的一行内容
-	data = make(map[int64]models.PortLiunx)
+	data = make(map[int64]models.PortData)
 	var status = 2
 	for {
 		line, err2 := reader.ReadString('\n')
@@ -70,12 +70,12 @@ func liunx_dk() (data map[int64]models.PortLiunx) {
 
 }
 
-func makeprotliunx(data string) (models.PortLiunx, error) {
+func makeprotliunx(data string) (models.PortData, error) {
 	var tmp = []rune(data) //生成对应的列表
 	var status, key = 0, 0 // 状态
 	var p_d = ""
 	nub := len(tmp)
-	newdata := models.PortLiunx{}
+	newdata := models.PortData{}
 	for i := 0; i < nub; i++ {
 		if string(tmp[i]) != " " {
 			p_d += string(tmp[i])
@@ -85,10 +85,10 @@ func makeprotliunx(data string) (models.PortLiunx, error) {
 				switch key {
 				case 0:
 					if p_d == "Active"{
-						return models.PortLiunx{}, errors.New("执行完毕")
+						return models.PortData{}, errors.New("执行完毕")
 					}
 					if p_d == "unix"{
-						return models.PortLiunx{}, errors.New("执行完毕")
+						return models.PortData{}, errors.New("执行完毕")
 					}
 					newdata.Proto = p_d
 				case 1:
@@ -119,7 +119,7 @@ func makeprotliunx(data string) (models.PortLiunx, error) {
 	if len(dd) == 2{
 		pid,err :=strconv.ParseInt(dd[0], 10, 64)
 		if err != nil{
-			return models.PortLiunx{},errors.New("分割错误")
+			return models.PortData{},errors.New("分割错误")
 		}
 		newdata.Pid = pid
 		newdata.Program_name = dd[1]
@@ -157,7 +157,7 @@ func stringsplit(data string) (datalist []string)  {
 
 //处理进程信息
 
-func liunx_process() (data map[int64]models.ProcessLinux) {
+func liunx_process() (data map[int64]models.Process) {
 	cmd := exec.Command("ps", "aux")
 	//显示运行的命令
 	//fmt.Println("运行的命令", cmd.Args)
@@ -169,7 +169,7 @@ func liunx_process() (data map[int64]models.ProcessLinux) {
 	cmd.Start()
 	reader := bufio.NewReader(stdout)
 	//实时循环读取输出流中的一行内容
-	data = make(map[int64]models.ProcessLinux)
+	data = make(map[int64]models.Process)
 	var status = 1
 	for {
 		line, err2 := reader.ReadString('\n')
@@ -188,19 +188,15 @@ func liunx_process() (data map[int64]models.ProcessLinux) {
 		}
 
 	}
-	//b, _ := json.Marshal(data)
-
-	//err = writefile(b)
-	//fmt.Println(data)
 	cmd.Wait()
 	return
 }
 
-func makedataliunx(data string) (models.ProcessLinux, error) {
+func makedataliunx(data string) (models.Process, error) {
 	var tmp = []rune(data) //生成对应的列表
 	var status, key = 0, 0 // 状态
 	var p_d = ""
-	newdata := models.ProcessLinux{}
+	newdata := models.Process{}
 	for i := 0; i < len(tmp); i++ {
 		if string(tmp[i]) != " " {
 			if string(tmp[i]) == "[" || string(tmp[i]) == "]" {
