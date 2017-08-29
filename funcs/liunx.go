@@ -61,6 +61,18 @@ func liunx_dk() (data map[int64]models.PortData) {
 			//fmt.Println(err)
 			break
 		} else {
+			if _,ok := data[tmp.Pid];ok{
+				atpm := data[tmp.Pid]
+				atpm.Proto +=  "<br>"+tmp.Proto
+				atpm.ForeignAddr +=  "<br>"+tmp.ForeignAddr
+				atpm.LocalAddr +=  "<br>"+tmp.LocalAddr
+				atpm.State +=  "<br>"+tmp.State
+				atpm.Program_name +=  "<br>"+tmp.Program_name
+				atpm.Sendq +=  "<br>"+tmp.Sendq
+				atpm.Recvq +=  "<br>"+tmp.Recvq
+				tmp = atpm
+			}
+
 			data[tmp.Pid] = tmp
 		}
 
